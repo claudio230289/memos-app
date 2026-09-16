@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memos por Provincia</title>
+    <!-- Tailwind CSS para que se vea bien y sea responsive en el celu -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">📌 Memos por Provincia</h1>
+        
+        <!-- Formulario de Carga -->
+        <form id="memoForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-semibold mb-1 text-sm">Provincia</label>
+                <select id="provincia" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    <option value="">Seleccionar provincia...</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Formosa">Formosa</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 font-semibold mb-1 text-sm">Título / Asunto</label>
+                <input type="text" id="titulo" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: Control de stock" required>
+            </div>
+            <div>
+                <label class="block text-gray-700 font-semibold mb-1 text-sm">Contenido del Memo</label>
+                <textarea id="contenido" rows="3" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escribí los detalles..." required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition shadow">
+                Guardar Memo
+            </button>
+        </form>
+
+        <!-- Botones de Exportación para la PC -->
+        <div class="mt-6 flex gap-2">
+            <button onclick="exportarJSON()" class="flex-1 bg-emerald-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-emerald-700 transition">
+                📥 Descargar JSON
+            </button>
+            <button onclick="exportarCSV()" class="flex-1 bg-teal-700 text-white text-sm font-semibold py-2 rounded-lg hover:bg-teal-800 transition">
+                📊 Descargar CSV (Excel)
+            </button>
+        </div>
+
+        <!-- Listado de Memos -->
+        <div class="mt-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-3">Memos Guardados</h2>
+            <div id="listaMemos" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <!-- Se cargan dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('memoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const provincia = document.getElementById('provincia').value;
+            const titulo = document.getElementById('titulo').value;
+            const contenido = document.getElementById('contenido').value;
+            const fecha = new Date().toLocaleString();
+
+            const nuevoMemo = { id: Date.now(), provincia, titulo, contenido, fecha };
+
+            let memos = JSON.parse(localStorage.getItem('memos')) || [];
+            memos.unshift(nuevoMemo); // Agrega al principio
+            localStorage.setItem('memos', JSON.stringify(memos));
+
+            document.getElementById('memoForm').reset();
+            cargarMemos();
+        });
+
+        function cargarMemos() {
+            const lista = document.getElementById('listaMemos');
+            const memos = JSON.parse(localStorage.getItem('memos')) || [];
+            
+            if (memos.length === 0) {
+                lista.innerHTML = '<p class="text-gray-400 text-center text-sm py-4">No hay memos cargados.</p>';
+                return;
+            }
+
+            lista.innerHTML = '';
+            memos.forEach(memo => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-xs';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">${memo.provincia}</span>
+                        <span class="text-[10px] text-gray-400">${memo.fecha}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">${memo.titulo}</h3>
+                    <p class="text-gray-600 text-xs mt-1 whitespace-pre-line">${memo.contenido}</p>
+                    <div class="text-right mt-2">
+                        <button onclick="eliminarMemo(${memo.id})" class="text-red-500 text-[11px] hover:underline">Eliminar</button>
+                    </div>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        function eliminarMemo(id) {
+            let memos = JSON.parse(localStorage.getItem('memos')) || [];
+            memos = memos.filter(m => m.id !== id);
+            localStorage.setItem('memos', JSON.stringify(memos));
+            cargarMemos();
+        }
+
+        function exportarJSON() {
+            const memos = localStorage.getItem('memos') || '[]';
+            const blob = new Blob([memos], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `memos_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarCSV() {
+            const memos = JSON.parse(localStorage.getItem('memos')) || [];
+            if (memos.length === 0) {
+                alert('No hay memos para exportar.');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,ID,Provincia,Titulo,Contenido,Fecha\n";
+            memos.forEach(m => {
+                let contenidoLimpio = m.contenido.replace(/[\n\r]+/g, " "); // Limpiar saltos de línea para el CSV
+                csvContent += `"${m.id}","${m.provincia}","${m.titulo}","${contenidoLimpio}","${m.fecha}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const a = document.createElement('a');
+            a.href = encodedUri;
+            a.download = `memos_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        // Inicializar
+        cargarMemos();
+    </script>
+</body>
+</html>
