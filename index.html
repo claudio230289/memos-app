@@ -13,10 +13,15 @@
 <body class="bg-gray-100 min-h-screen p-4">
     <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg overflow-hidden p-6">
         <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">📝 Memos Jota Be</h1>
-            <button id="installButton" type="button" class="hidden bg-gray-800 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-900 transition" aria-label="Instalar Memos Jota Be">
-                Instalar
-            </button>
+            <h1 class="text-xl font-bold text-gray-800">📝 Memos Jota Be</h1>
+            <div class="flex items-center gap-1.5">
+                <button onclick="compartirApp()" type="button" class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-1">
+                    🔗 Compartir
+                </button>
+                <button id="installButton" type="button" class="hidden bg-gray-800 text-white text-xs font-semibold px-2.5 py-2 rounded-lg hover:bg-gray-900 transition">
+                    Instalar
+                </button>
+            </div>
         </div>
 
         <!-- Formulario de Carga / Edición -->
@@ -98,6 +103,19 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+        }
+
+        function compartirApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Memos Jota Be',
+                    text: 'Mirá la app de Memos por Provincia:',
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('¡Enlace de la app copiado al portapapeles!');
+            }
         }
 
         function toggleTranscripcion() {
