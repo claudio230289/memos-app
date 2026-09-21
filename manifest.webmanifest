@@ -1,0 +1,20 @@
+{
+  "name": "Memos Jota Be",
+  "short_name": "Memos Jota Be",
+  "description": "Memos organizados por provincia",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f4f6",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "icons/memo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
